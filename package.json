@@ -1,6 +1,6 @@
 {
   "name": "obsidian-azure-devops-mermaid-plugin",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "Obsidian plugin to render Azure DevOps :::mermaid syntax.",
   "main": "main.js",
   "scripts": {
