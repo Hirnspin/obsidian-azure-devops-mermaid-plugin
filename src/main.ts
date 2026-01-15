@@ -303,12 +303,13 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: AzureDevOpsM
     
     // Render mermaid synchronously
     try {
+      // eslint-disable-next-line obsidianmd/no-plugin-as-component -- MarkdownRenderer requires Component
       void MarkdownRenderer.render(
         plugin.app,
         mermaidMarkdown,
         block,
         "",
-        null
+        plugin
       );
     } catch (e) {
       console.debug(`[AzureDevOpsMermaid] MarkdownRenderer error: ${String(e)}`);
@@ -327,5 +328,6 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: AzureDevOpsM
     i = closingIdx;
   }
 }
+
 
 
