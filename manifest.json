@@ -1,9 +1,9 @@
 {
-    "id":  "azure-devops-mermaid",
-    "name":  "Azure DevOps Mermaid",
-    "version":  "0.1.1",
-    "minAppVersion":  "1.4.16",
-    "description":  "Render Azure DevOps :::mermaid blocks.",
-    "author":  "Hirnspin",
-    "isDesktopOnly":  false
+	"id": "azure-devops-mermaid",
+	"name": "Azure DevOps Mermaid",
+	"version": "0.1.2",
+	"minAppVersion": "1.4.16",
+	"description": "Render Azure DevOps :::mermaid blocks.",
+	"author": "Hirnspin",
+	"isDesktopOnly": false
 }
