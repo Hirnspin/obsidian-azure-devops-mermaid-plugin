@@ -1,3 +1,5 @@
+[![Release Obsidian plugin](https://github.com/Hirnspin/obsidian-azure-devops-mermaid-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/Hirnspin/obsidian-azure-devops-mermaid-plugin/actions/workflows/release.yml)
+
 # Azure DevOps Mermaid Syntax for Obsidian
 
 Obsidian plugin that renders Azure DevOps-style `:::mermaid` blocks by converting them into regular Mermaid code fences for Obsidian's renderer.
