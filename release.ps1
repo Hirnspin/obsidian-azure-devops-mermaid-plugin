@@ -19,16 +19,12 @@ $version = $packageJson.version
 $existingTags = git tag
 if ($existingTags -contains $version) {
     # Create a patch version
-    $newVersion = npm version patch --no-git-tag-version
-    # Update the version in package.json
-    $packageJson.version = $newVersion
-    $packageJson | ConvertTo-Json -Depth 10 | Set-Content -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json'
+    $newVersion = (npm version patch --no-git-tag-version).TrimStart('v')
+    # Re-read the updated package.json
+    $packageJson = Get-Content -Raw -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json' | ConvertFrom-Json
 } else {
     $newVersion = $version
 }
-
-# Release script
-npm version $newVersion --no-git-tag-version
 
 # Update the version in manifest.json
 $manifestJsonPath = 'c:\repos\obsidian-azure-devops-mermaid-plugin\manifest.json'
