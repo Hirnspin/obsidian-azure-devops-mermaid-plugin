@@ -68,7 +68,7 @@ interface WindowWithCodeMirror extends Window {
   Decoration: CodeMirrorDecoration;
   RangeSetBuilder: new () => CodeMirrorRangeSetBuilder;
   StateField: CodeMirrorStateField;
-  syntaxTree(state: CodeMirrorState): CodeMirrorSyntaxTree;
+  syntaxTree: (state: CodeMirrorState) => CodeMirrorSyntaxTree;
 }
 
 /**
@@ -81,6 +81,6 @@ export function getCodeMirrorAPI(): CodeMirrorAPI {
     Decoration: win.Decoration,
     RangeSetBuilder: win.RangeSetBuilder,
     StateField: win.StateField,
-    syntaxTree: win.syntaxTree,
+    syntaxTree: (state: CodeMirrorState) => win.syntaxTree(state),
   };
 }

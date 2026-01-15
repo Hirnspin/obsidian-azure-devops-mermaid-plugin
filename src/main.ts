@@ -308,7 +308,7 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: AzureDevOpsM
         mermaidMarkdown,
         block,
         "",
-        plugin
+        null
       );
     } catch (e) {
       console.debug(`[AzureDevOpsMermaid] MarkdownRenderer error: ${String(e)}`);

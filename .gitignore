@@ -3,6 +3,14 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Obsidian plugin build artifacts
+main.js
+main.js.map
+*.js.map
+
+# Node.js dependencies
+node_modules/
+
 # User-specific files
 *.rsuser
 *.suo

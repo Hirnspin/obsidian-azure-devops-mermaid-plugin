@@ -12,29 +12,28 @@ if ($gitStatus) {
 }
 
 # Get the current version from package.json
-$packageJson = Get-Content -Raw -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json' | ConvertFrom-Json
+$packageJson = Get-Content -Raw -Path 'package.json' | ConvertFrom-Json
 $version = $packageJson.version
 
 # Check if the version already exists as a tag
 $existingTags = git tag
 if ($existingTags -contains $version) {
-    # Create a patch version
+    Write-Host "Version $version already released. Bumping patch version..." -ForegroundColor Yellow
+    # Create a patch version using npm (updates package.json)
     $newVersion = (npm version patch --no-git-tag-version).TrimStart('v')
-    # Re-read the updated package.json
-    $packageJson = Get-Content -Raw -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json' | ConvertFrom-Json
 } else {
     $newVersion = $version
 }
 
-# Update the version in manifest.json
-$manifestJsonPath = 'c:\repos\obsidian-azure-devops-mermaid-plugin\manifest.json'
-$manifestJson = Get-Content -Raw -Path $manifestJsonPath | ConvertFrom-Json
-$manifestJson.version = $newVersion
-$manifestJson | ConvertTo-Json -Depth 10 | Set-Content -Path $manifestJsonPath
+# Sync manifest.json and versions.json using the version-bump script
+# This ensures manifest.json and versions.json are in sync with package.json
+Write-Host "Syncing version files..." -ForegroundColor Yellow
+$env:npm_package_version = $newVersion
+node version-bump.mjs
 
 # Commit changes
 if (-not $DryRun) {
-    git add .
+    git add package.json manifest.json versions.json
     git commit -m "Release version $newVersion"
 
     # Create and push git tag

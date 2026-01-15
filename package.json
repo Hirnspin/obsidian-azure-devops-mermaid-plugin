@@ -7,7 +7,12 @@
     "dev": "node esbuild.config.mjs --watch",
     "build": "node esbuild.config.mjs --production",
     "check": "tsc --noEmit",
-    "release": "powershell -File release.ps1"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "preversion": "npm run check && npm run lint && npm run build",
+    "version": "node version-bump.mjs && git add manifest.json versions.json",
+    "release": "node release.mjs",
+    "release:dry-run": "node release.mjs --dry-run"
   },
   "keywords": [
     "obsidian",
@@ -26,9 +31,16 @@
   "license": "MIT",
   "devDependencies": {
     "@types/markdown-it": "^14.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
     "esbuild": "^0.21.5",
+    "eslint": "^9.18.0",
+    "eslint-plugin-obsidianmd": "^0.1.9",
+    "globals": "^15.14.0",
+    "jiti": "^2.6.1",
     "obsidian": "^1.5.8",
     "tslib": "^2.6.2",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.2",
+    "typescript-eslint": "^8.18.2"
   }
 }
