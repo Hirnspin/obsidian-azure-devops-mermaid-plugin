@@ -1,4 +1,4 @@
-/* eslint-env node */
+/* global process */
 import { execSync, spawnSync } from 'child_process';
 import { readFileSync } from 'fs';
 
@@ -84,3 +84,5 @@ try {
 	log(`Error: ${error.message}`, 'red');
 	process.exit(1);
 }
+
+
