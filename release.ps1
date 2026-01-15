@@ -1,5 +1,16 @@
 # PowerShell script to release the plugin
 
+param(
+    [switch]$DryRun = $false
+)
+
+# Check if git working directory is clean
+$gitStatus = git status --porcelain
+if ($gitStatus) {
+    Write-Host "Error: Git working directory is not clean. Please commit or stash your changes." -ForegroundColor Red
+    exit 1
+}
+
 # Get the current version from package.json
 $packageJson = Get-Content -Raw -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json' | ConvertFrom-Json
 $version = $packageJson.version
@@ -11,7 +22,7 @@ if ($existingTags -contains $version) {
     $newVersion = npm version patch
     # Update the version in package.json
     $packageJson.version = $newVersion
-    $packageJson | ConvertTo-Json -Depth 10 | Set-Content -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json'
+    $packageJson | ConvertTo-Json -Depth 10 | ForEach-Object { [System.Text.RegularExpressions.Regex]::Replace($_, '(?m)^', '  ').TrimStart() } | Set-Content -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json'
 } else {
     $newVersion = $version
 }
@@ -23,12 +34,21 @@ npm version $newVersion
 $manifestJsonPath = 'c:\repos\obsidian-azure-devops-mermaid-plugin\manifest.json'
 $manifestJson = Get-Content -Raw -Path $manifestJsonPath | ConvertFrom-Json
 $manifestJson.version = $newVersion
-$manifestJson | ConvertTo-Json -Depth 10 | Set-Content -Path $manifestJsonPath
+$manifestJson | ConvertTo-Json -Depth 10 | ForEach-Object { [System.Text.RegularExpressions.Regex]::Replace($_, '(?m)^', '  ').TrimStart() } | Set-Content -Path $manifestJsonPath
 
 # Commit changes
-git add .
-git commit -m "Release version $newVersion"
+if (-not $DryRun) {
+    git add .
+    git commit -m "Release version $newVersion"
 
-# Create and push git tag
-git tag -a $newVersion -m "$newVersion"
-git push origin $newVersion
+    # Create and push git tag
+    git tag -a $newVersion -m "$newVersion"
+    git push origin $newVersion
+    Write-Host "Release version $newVersion completed successfully." -ForegroundColor Green
+} else {
+    Write-Host "Dry run mode: The following changes would be made:" -ForegroundColor Yellow
+    Write-Host "- Version updated to: $newVersion" -ForegroundColor Yellow
+    Write-Host "- Would commit: Release version $newVersion" -ForegroundColor Yellow
+    Write-Host "- Would create tag: $newVersion" -ForegroundColor Yellow
+    Write-Host "- Would push tag to origin" -ForegroundColor Yellow
+}
