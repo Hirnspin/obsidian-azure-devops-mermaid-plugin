@@ -3,8 +3,7 @@
     "name":  "Azure DevOps Mermaid",
     "version":  "0.1.1",
     "minAppVersion":  "1.4.16",
-    "description":  "Render Azure DevOps :::mermaid blocks inside Obsidian.",
+    "description":  "Render Azure DevOps :::mermaid blocks.",
     "author":  "Hirnspin",
-    "authorUrl":  "https://github.com/Hirnspin/obsidian-azure-devops-mermaid-plugin",
     "isDesktopOnly":  false
 }
