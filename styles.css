@@ -1,0 +1,19 @@
+/* Azure DevOps Mermaid Plugin Styles */
+
+/* Syntax highlighting for :::mermaid blocks in edit mode */
+.azure-mermaid-block {
+  background-color: rgba(100, 150, 255, 0.05);
+  border-left: 3px solid #6496ff;
+}
+
+/* Marker styling for opening and closing ::: */
+.azure-mermaid-marker {
+  color: #6496ff;
+  font-weight: 600;
+  background-color: rgba(100, 150, 255, 0.1);
+}
+
+/* Optional: Add padding around the mermaid block */
+.cm-editor .azure-mermaid-block {
+  padding-left: 8px;
+}
