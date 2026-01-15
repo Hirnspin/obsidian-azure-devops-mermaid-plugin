@@ -34,25 +34,36 @@ export interface CodeMirrorRangeSetBuilder {
   finish(): CodeMirrorDecorationSet;
 }
 
-export interface CodeMirrorDecorationSet {
-  // Placeholder for DecorationSet interface
-}
+export type CodeMirrorDecorationSet = Record<string, never>;
 
 export interface CodeMirrorEditorView {
   decorations: {
-    from(field: any): any;
+    from(field: unknown): unknown;
   };
+}
+
+export interface CodeMirrorTransaction {
+  docChanged: boolean;
+  state: CodeMirrorState;
 }
 
 export interface CodeMirrorStateField {
   define<T>(config: {
     create(state: CodeMirrorState): T;
-    update(value: T, transaction: any): T;
-    provide(field: any): any;
-  }): any;
+    update(value: T, transaction: CodeMirrorTransaction): T;
+    provide(field: unknown): unknown;
+  }): unknown;
 }
 
 export interface CodeMirrorAPI {
+  EditorView: CodeMirrorEditorView;
+  Decoration: CodeMirrorDecoration;
+  RangeSetBuilder: new () => CodeMirrorRangeSetBuilder;
+  StateField: CodeMirrorStateField;
+  syntaxTree(state: CodeMirrorState): CodeMirrorSyntaxTree;
+}
+
+interface WindowWithCodeMirror extends Window {
   EditorView: CodeMirrorEditorView;
   Decoration: CodeMirrorDecoration;
   RangeSetBuilder: new () => CodeMirrorRangeSetBuilder;
@@ -64,11 +75,12 @@ export interface CodeMirrorAPI {
  * Get CodeMirror API from window (provided by Obsidian)
  */
 export function getCodeMirrorAPI(): CodeMirrorAPI {
+  const win = window as unknown as WindowWithCodeMirror;
   return {
-    EditorView: (window as any).EditorView,
-    Decoration: (window as any).Decoration,
-    RangeSetBuilder: (window as any).RangeSetBuilder,
-    StateField: (window as any).StateField,
-    syntaxTree: (window as any).syntaxTree,
+    EditorView: win.EditorView,
+    Decoration: win.Decoration,
+    RangeSetBuilder: win.RangeSetBuilder,
+    StateField: win.StateField,
+    syntaxTree: win.syntaxTree,
   };
 }

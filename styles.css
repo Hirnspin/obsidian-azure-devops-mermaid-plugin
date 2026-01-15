@@ -17,3 +17,8 @@
 .cm-editor .azure-mermaid-block {
   padding-left: 8px;
 }
+
+/* Hidden class for intermediate blocks */
+.azure-mermaid-hidden {
+  display: none;
+}

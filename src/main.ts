@@ -2,7 +2,7 @@ import { Plugin, MarkdownRenderer } from "obsidian";
 import type MarkdownIt from "markdown-it";
 import type { MarkdownPostProcessorContext } from "obsidian";
 import { getCodeMirrorAPI } from "./codemirror-types";
-import type { CodeMirrorState, CodeMirrorNode } from "./codemirror-types";
+import type { CodeMirrorState, CodeMirrorNode, CodeMirrorAPI, CodeMirrorDecorationSet } from "./codemirror-types";
 
 declare global {
   interface Window {
@@ -18,12 +18,12 @@ const MIN_MARKER_COUNT = 3;
 const TARGET_INFO = "mermaid";
 
 export default class AzureDevOpsMermaidPlugin extends Plugin {
-  async onload() {
-    console.log("[AzureDevOpsMermaid] Plugin loading...");
+  onload(): void {
+    console.debug("[AzureDevOpsMermaid] Plugin loading...");
 
     // Method 1: Try registerMarkdownIt (Obsidian >= 1.4.16)
     if (this.registerMarkdownIt) {
-      console.log("[AzureDevOpsMermaid] Using registerMarkdownIt");
+      console.debug("[AzureDevOpsMermaid] Using registerMarkdownIt");
       this.registerMarkdownIt((md: MarkdownIt) => {
         md.block.ruler.before(
           "fence",
@@ -33,32 +33,51 @@ export default class AzureDevOpsMermaidPlugin extends Plugin {
         );
         return md;
       });
-      console.log("[AzureDevOpsMermaid] ✓ Markdown-it rule registered");
+      console.debug("[AzureDevOpsMermaid] ✓ Markdown-it rule registered");
     }
     // Method 2: Fallback to DOM post-processor
     else if (this.registerMarkdownPostProcessor) {
-      console.log("[AzureDevOpsMermaid] Using registerMarkdownPostProcessor fallback");
-      const plugin = this;
+      console.debug("[AzureDevOpsMermaid] Using registerMarkdownPostProcessor fallback");
       this.registerMarkdownPostProcessor((el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-        transformAzureMermaidGlobally(el, plugin);
+        transformAzureMermaidGlobally(el, this);
       }, 5);
-      console.log("[AzureDevOpsMermaid] ✓ DOM post-processor registered");
+      console.debug("[AzureDevOpsMermaid] ✓ DOM post-processor registered");
     } else {
       console.error("[AzureDevOpsMermaid] No markdown processing method available!");
     }
 
     // Register CodeMirror editor extensions for syntax highlighting and folding
-    this.registerEditorExtension(createAzureMermaidEditorExtension());
-    this.registerEditorExtension(createMermaidFoldExtension());
-    console.log("[AzureDevOpsMermaid] ✓ Editor extensions registered");
+    this.registerEditorExtension(createAzureMermaidEditorExtension() as never);
+    this.registerEditorExtension(createMermaidFoldExtension() as never);
+    console.debug("[AzureDevOpsMermaid] ✓ Editor extensions registered");
 
     // Load CSS for syntax highlighting
-    (this as any).addCSSFile("styles.css");
+    interface PluginWithAddCSSFile extends Plugin {
+      addCSSFile(path: string): void;
+    }
+    (this as unknown as PluginWithAddCSSFile).addCSSFile("styles.css");
   }
 }
 
+interface MarkdownItState {
+  bMarks: number[];
+  tShift: number[];
+  eMarks: number[];
+  src: string;
+  line: number;
+  getLines(start: number, end: number, indent: number, keepLastLF: boolean): string;
+  push(type: string, tag: string, nesting: number): MarkdownItToken;
+}
+
+interface MarkdownItToken {
+  info: string;
+  content: string;
+  markup: string;
+  map: [number, number] | null;
+}
+
 function createAzureMermaidRule() {
-  return (state: any, startLine: number, endLine: number, silent: boolean): boolean => {
+  return (state: MarkdownItState, startLine: number, endLine: number, silent: boolean): boolean => {
     const startPos = state.bMarks[startLine] + state.tShift[startLine];
     const endPos = state.eMarks[startLine];
     const line = state.src.slice(startPos, endPos).trim();
@@ -112,20 +131,20 @@ function createAzureMermaidRule() {
 /**
  * CodeMirror extension for Azure DevOps Mermaid syntax highlighting
  */
-function createAzureMermaidEditorExtension(): any {
+function createAzureMermaidEditorExtension(): unknown {
   const cm = getCodeMirrorAPI();
 
   const mermaidHighlight = cm.StateField.define({
     create(state: CodeMirrorState) {
       return buildMermaidDecorations(state, cm);
     },
-    update(decorations: any, transaction: any) {
+    update(decorations: CodeMirrorDecorationSet, transaction: { docChanged: boolean; state: CodeMirrorState }) {
       if (transaction.docChanged) {
         return buildMermaidDecorations(transaction.state, cm);
       }
       return decorations;
     },
-    provide(field: any) {
+    provide(field: unknown) {
       return cm.EditorView.decorations.from(field);
     },
   });
@@ -136,7 +155,7 @@ function createAzureMermaidEditorExtension(): any {
 /**
  * Build decorations for :::mermaid blocks in the editor
  */
-function buildMermaidDecorations(state: CodeMirrorState, cm: any): any {
+function buildMermaidDecorations(state: CodeMirrorState, cm: CodeMirrorAPI): CodeMirrorDecorationSet {
   const builder = new cm.RangeSetBuilder();
 
   // Find all fence blocks and look for mermaid ones
@@ -182,7 +201,7 @@ function buildMermaidDecorations(state: CodeMirrorState, cm: any): any {
 /**
  * Code folding support for :::mermaid blocks
  */
-function createMermaidFoldExtension(): any {
+function createMermaidFoldExtension(): unknown[] {
   // Return an empty extension - Obsidian handles folding natively
   // This is a placeholder for future fold customization
   return [];
@@ -193,7 +212,7 @@ function createMermaidFoldExtension(): any {
  * Since Obsidian post-processor is called element-by-element, we need to process
  * the whole DOM tree looking for the pattern.
  */
-function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: any): void {
+function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: AzureDevOpsMermaidPlugin): void {
   // Skip if already processed (marked with data attribute)
   if (rootEl.hasAttribute("data-azure-mermaid-processed")) {
     return;
@@ -261,7 +280,7 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: any): void {
     }
 
     if (closingIdx === -1) {
-      console.log("[AzureDevOpsMermaid] No closing ::: found");
+      console.debug("[AzureDevOpsMermaid] No closing ::: found");
       continue;
     }
 
@@ -284,7 +303,7 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: any): void {
     
     // Render mermaid synchronously
     try {
-      MarkdownRenderer.render(
+      void MarkdownRenderer.render(
         plugin.app,
         mermaidMarkdown,
         block,
@@ -292,7 +311,7 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: any): void {
         plugin
       );
     } catch (e) {
-      console.log(`[AzureDevOpsMermaid] MarkdownRenderer error: ${e}`);
+      console.debug(`[AzureDevOpsMermaid] MarkdownRenderer error: ${String(e)}`);
     }
     
     // Hide/clear intermediate blocks
@@ -300,7 +319,7 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: any): void {
       const toHide = allBlocks[j];
       if (toHide?.isConnected) {
         toHide.innerHTML = "";
-        toHide.style.display = "none";
+        toHide.classList.add("azure-mermaid-hidden");
       }
     }
     
@@ -309,87 +328,4 @@ function transformAzureMermaidGlobally(rootEl: HTMLElement, plugin: any): void {
   }
 }
 
-/**
- * DOM post-processor: finds :::mermaid...:::|  text patterns in the HTML
- * and converts them to <pre><code class="language-mermaid">...</code></pre>.
- */
-function transformAzureMermaidDOM(container: HTMLElement): void {
-  const containerText = container.textContent?.trim() ?? "";
 
-  // Check if this container's direct text is :::mermaid
-  if (!containerText.match(/^:{3,}\s*mermaid\s*$/i)) {
-    return;
-  }
-
-  console.log("[AzureDevOpsMermaid] Found :::mermaid container");
-  console.log("[AzureDevOpsMermaid] Container:", container.className, "tag:", container.tagName);
-  console.log("[AzureDevOpsMermaid] Container parent:", container.parentElement?.className, container.parentElement?.tagName);
-
-  // Walk up to find a parent that has multiple children
-  let parent = container.parentElement;
-  let searchContainer = container;
-
-  while (parent && parent.children.length <= 1) {
-    console.log(`[AzureDevOpsMermaid] Parent has only ${parent.children.length} child, walking up...`);
-    searchContainer = parent;
-    parent = parent.parentElement;
-  }
-
-  if (!parent) {
-    console.log("[AzureDevOpsMermaid] Could not find a parent with multiple children");
-    return;
-  }
-
-  const siblings = Array.from(parent.children);
-  const containerIdx = siblings.indexOf(searchContainer);
-
-  console.log(`[AzureDevOpsMermaid] Found parent with ${siblings.length} children, our container at index ${containerIdx}`);
-
-  // Collect lines from subsequent siblings
-  const lines: string[] = [];
-  let closingIdx = -1;
-
-  for (let i = containerIdx + 1; i < siblings.length; i++) {
-    const sib = siblings[i] as HTMLElement;
-    const sibText = sib.textContent?.trim() ?? "";
-
-    console.log(`[AzureDevOpsMermaid]   Sibling ${i}: "${sibText.substring(0, 50)}"`);
-
-    if (/^:{3,}\s*$/.test(sibText)) {
-      closingIdx = i;
-      console.log("[AzureDevOpsMermaid] Found closing ::: at index", i);
-      break;
-    }
-
-    lines.push(sib.textContent ?? "");
-  }
-
-  if (closingIdx === -1) {
-    console.log("[AzureDevOpsMermaid] No closing ::: found after checking", siblings.length - containerIdx - 1, "siblings");
-    return;
-  }
-
-  const mermaidContent = lines.join("\n").trim();
-  console.log("[AzureDevOpsMermaid] Mermaid content:", mermaidContent.substring(0, 100));
-
-  // Create mermaid code block
-  const pre = document.createElement("pre");
-  const code = document.createElement("code");
-  code.className = "language-mermaid";
-  code.textContent = mermaidContent;
-  pre.appendChild(code);
-
-  // Replace container content
-  container.innerHTML = "";
-  container.appendChild(pre);
-
-  // Remove intermediate and closing siblings in reverse
-  for (let i = closingIdx; i > containerIdx; i--) {
-    const toRemove = siblings[i];
-    if (toRemove?.isConnected) {
-      toRemove.remove();
-    }
-  }
-
-  console.log("[AzureDevOpsMermaid] Mermaid block rendered successfully");
-}
