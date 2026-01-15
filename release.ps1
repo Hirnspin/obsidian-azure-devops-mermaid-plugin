@@ -22,7 +22,7 @@ if ($existingTags -contains $version) {
     $newVersion = npm version patch
     # Update the version in package.json
     $packageJson.version = $newVersion
-    $packageJson | ConvertTo-Json -Depth 10 | ForEach-Object { [System.Text.RegularExpressions.Regex]::Replace($_, '(?m)^', '  ').TrimStart() } | Set-Content -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json'
+    $packageJson | ConvertTo-Json -Depth 10 | Set-Content -Path 'c:\repos\obsidian-azure-devops-mermaid-plugin\package.json'
 } else {
     $newVersion = $version
 }
@@ -34,7 +34,7 @@ npm version $newVersion
 $manifestJsonPath = 'c:\repos\obsidian-azure-devops-mermaid-plugin\manifest.json'
 $manifestJson = Get-Content -Raw -Path $manifestJsonPath | ConvertFrom-Json
 $manifestJson.version = $newVersion
-$manifestJson | ConvertTo-Json -Depth 10 | ForEach-Object { [System.Text.RegularExpressions.Regex]::Replace($_, '(?m)^', '  ').TrimStart() } | Set-Content -Path $manifestJsonPath
+$manifestJson | ConvertTo-Json -Depth 10 | Set-Content -Path $manifestJsonPath
 
 # Commit changes
 if (-not $DryRun) {
