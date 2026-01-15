@@ -36,8 +36,7 @@ try {
 		log(`Version ${currentVersion} already released. Bumping patch version...`, 'yellow');
 		// npm version patch --no-git-tag-version will:
 		// 1. Update package.json version
-		// 2. Trigger preversion hook (check + lint)
-		// 3. Trigger version hook (version-bump.mjs)
+		// 2. Trigger preversion hook (check + lint + build)
 		const result = spawnSync('npm', ['version', 'patch', '--no-git-tag-version'], {
 			stdio: 'inherit',
 			shell: true
@@ -51,16 +50,18 @@ try {
 		newVersion = updatedPackageJson.version;
 	} else {
 		log(`Releasing version ${newVersion}...`, 'yellow');
-		// Still need to run version hook to sync manifest.json and versions.json
-		process.env.npm_package_version = newVersion;
-		const result = spawnSync('node', ['version-bump.mjs'], {
-			stdio: 'inherit',
-			shell: true
-		});
-		if (result.status !== 0) {
-			log('Error: Failed to sync version files', 'red');
-			process.exit(1);
-		}
+	}
+
+	// Always sync manifest.json and versions.json with the version
+	log('Syncing version files...', 'yellow');
+	process.env.npm_package_version = newVersion;
+	const versionBumpResult = spawnSync('node', ['version-bump.mjs'], {
+		stdio: 'inherit',
+		shell: true
+	});
+	if (versionBumpResult.status !== 0) {
+		log('Error: Failed to sync version files', 'red');
+		process.exit(1);
 	}
 
 	// Commit changes
