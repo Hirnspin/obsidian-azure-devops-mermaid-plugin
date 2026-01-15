@@ -66,7 +66,7 @@ try {
 
 	// Commit changes
 	if (!dryRun) {
-		execSync('git add package.json manifest.json versions.json', { stdio: 'inherit' });
+		execSync('git add package.json package-lock.json manifest.json versions.json', { stdio: 'inherit' });
 		execSync(`git commit -m "Release version ${newVersion}"`, { stdio: 'inherit' });
 
 		// Create and push git tag
